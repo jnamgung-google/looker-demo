@@ -113,12 +113,11 @@ view: minor_hotel_performance {
   }
 
   # [RLS Target Dimension] Country dimension mapped to `user_attribute: country`
-  # Example: 'Bangkok, Thailand' -> 'Thailand', 'Madrid, Spain' -> 'Spain'
   dimension: country {
     type: string
     label: "Country (RLS Target)"
-    description: "Operating country extracted from Destination (e.g., Thailand, Vietnam, Spain, Italy, Portugal, Netherlands, UAE, Maldives, Australia, Tanzania). Used for user_attribute: country Row-Level Security (RLS)."
-    sql: TRIM(SPLIT(${TABLE}.country_city, ',')[SAFE_OFFSET(1)]) ;;
+    description: "Operating country of the hotel property (e.g., Thailand, Vietnam, Spain, Italy, Portugal, Netherlands, UAE, Maldives, Australia, Tanzania). Used for user_attribute: country Row-Level Security (RLS)."
+    sql: ${TABLE}.country ;;
     drill_fields: [property_name, brand_name, country_city]
   }
 
