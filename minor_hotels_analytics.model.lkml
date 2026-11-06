@@ -20,7 +20,7 @@ datagroup: minor_realtime_writeback_dg {
 # =========================================================================
 # COLUMN-LEVEL SECURITY (CLS) & ACTION RBAC ACCESS GRANTS
 # =========================================================================
-# user_attribute: country 또는 locale 등을 활용해 컬럼 노출 및 Action 실행 권한을 통제합니다.
+# Controls column visibility and Looker Action execution permissions using User Attributes.
 access_grant: can_view_owner_confidential_fees {
   user_attribute: locale
   allowed_values: ["en_US", "en", "th_TH", "es_ES"]
@@ -44,18 +44,18 @@ explore: minor_hotel_performance {
   # =========================================================================
   # ROW-LEVEL SECURITY (RLS) ENFORCEMENT VIA `sql_always_where`
   # =========================================================================
-  # [1] `user_attribute: country` 기반 실서버 RLS 통제:
-  #     - Looker Admin > User Attributes 의 `country` 속성값을 읽어 행(Row)을 자동 필터링합니다.
-  #     - 사용자의 `country` 값이 비어있거나(''), NULL, 'All', '%' 인 경우:
-  #       -> 조건이 TRUE가 되어 전체 국가(12개 모든 호텔) 데이터가 조회됩니다.
-  #     - 사용자의 `country` 값에 특정 국가명이 입력된 경우 (예: 'Thailand', 'Spain' 또는 'Thailand, Vietnam'):
-  #       -> 해당 국가(또는 지역/도시)에 속한 호텔 데이터만 조회됩니다.
-  # [2] 데모용 Role Simulator 파라미터 & 실시간 BigQuery RLS 승인(`minor_rls_access_control`) 연동:
-  #     - 대시보드 상단 Role Simulator 필터 테스트와 함께, 사용자가 추가 지역 권한을 신청해
-  #       승인(`[RLS_APPROVED]`)을 받으면 재로그인 없이 즉시 해당 지역 RLS가 열립니다.
+  # [1] Production RLS Governed by `user_attribute: country`:
+  #     - Automatically filters hotel rows based on the user's `country` User Attribute in Looker Admin.
+  #     - If the user's `country` attribute is empty (''), NULL, 'All', '%', or '*':
+  #       -> Evaluates to TRUE, granting full global visibility across all 12 properties.
+  #     - If the user's `country` attribute specifies one or more countries (e.g., 'Thailand', 'Spain', or 'Thailand, Vietnam'):
+  #       -> Restricts query results strictly to properties matching the assigned country/region.
+  # [2] Interactive Demo Role Simulator & Real-Time Dynamic RLS Approval (`minor_rls_access_control`):
+  #     - Works alongside the dashboard Role Simulator filter and immediately unlocks additional regions
+  #       in real time once a self-service RLS access request is marked `[RLS_APPROVED]` in BigQuery.
   sql_always_where:
     (
-      -- 1) User Attribute `country` 기반 RLS (NULL / 빈 문자열이면 전체 조회 허용)
+      -- 1) User Attribute `country` RLS (If NULL or empty string, allow full global access)
       NULLIF(TRIM('{{ _user_attributes["country"] }}'), '') IS NULL
       OR UPPER(TRIM('{{ _user_attributes["country"] }}')) IN ('NULL', 'ALL', '%', '*')
       OR UPPER(${minor_hotel_performance.country}) IN (
@@ -68,7 +68,7 @@ explore: minor_hotel_performance {
     )
     AND
     (
-      -- 2) 대시보드 Demo Role Simulator 파라미터 & 실시간 BigQuery RLS 승인(Dynamic Unlock)
+      -- 2) Interactive Demo Role Simulator Parameter & Live BigQuery RLS Approval (Dynamic Unlock)
       CASE {% parameter minor_hotel_performance.rls_role_persona %}
         WHEN 'RVPThailandAsia' THEN ${minor_hotel_performance.region_name} = 'Thailand & Indochina'
         WHEN 'RVPEuropeAmericas' THEN ${minor_hotel_performance.region_name} = 'Europe & Americas'

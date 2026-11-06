@@ -217,8 +217,8 @@ view: minor_hotel_performance {
     sql: ${TABLE}.country_city ;;
   }
 
-  # [RLS Target Dimension] user_attribute: country 와 매칭되는 국가(Country) 차원
-  # 예: 'Bangkok, Thailand' -> 'Thailand', 'Madrid, Spain' -> 'Spain'
+  # [RLS Target Dimension] Country dimension mapped to `user_attribute: country`
+  # Example: 'Bangkok, Thailand' -> 'Thailand', 'Madrid, Spain' -> 'Spain'
   dimension: country {
     type: string
     label: "Country (RLS Target)"
