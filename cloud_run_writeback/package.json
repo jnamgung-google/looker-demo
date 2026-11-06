@@ -1,0 +1,10 @@
+{
+  "name": "looker-bigquery-writeback-action",
+  "version": "1.0.0",
+  "main": "index.js",
+  "dependencies": {
+    "@google-cloud/bigquery": "^7.9.0",
+    "@google-cloud/functions-framework": "^3.4.0",
+    "@google-cloud/secret-manager": "^5.6.0"
+  }
+}
