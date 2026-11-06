@@ -18,9 +18,19 @@ datagroup: minor_realtime_writeback_dg {
 }
 
 # =========================================================================
-# COLUMN-LEVEL SECURITY (CLS) & ACTION RBAC ACCESS GRANTS
+# COLUMN-LEVEL SECURITY (CLS) & APPROVAL ACTION RBAC (`access_grant`)
 # =========================================================================
-# Controls column visibility and Looker Action execution permissions using User Attributes.
+# Controls which users can view confidential columns or execute Approval Actions.
+# 1. `can_approve_budget`:
+#    - Bound to `executive_approval_decision_action` (Budget Approval) and `approve_rls_access_action` (RLS Approval)
+#      via `required_access_grants: [can_approve_budget]`.
+#    - Only authorized Approvers (e.g., Regional VP, Group CFO) whose User Attribute matches `allowed_values`
+#      can see and execute the Approval Action column; for unauthorized users (e.g., Property GM / Viewer),
+#      Looker CLS completely hides the Approval column and blocks execution.
+# 2. `can_submit_budget_writeback`:
+#    - Bound to `writeback_forecast_override_action` via `required_access_grants: [can_submit_budget_writeback]`.
+# 3. `can_view_owner_confidential_fees`:
+#    - Controls Column-Level Security (CLS) access to confidential hotel owner management/incentive fee fields.
 access_grant: can_view_owner_confidential_fees {
   user_attribute: locale
   allowed_values: ["en_US", "en", "th_TH", "es_ES"]
@@ -38,7 +48,7 @@ access_grant: can_approve_budget {
 
 explore: minor_hotel_performance {
   label: "Minor Hotels Global Portfolio, Write-Back & Governance"
-  description: "Enterprise hospitality semantic layer for Minor Hotel Group (MINT): RevPAR, ADR, GOP, Live BigQuery Write-Back (Power Apps Replacement), Real-Time Approval Workflow (Power Automate + Dataverse Replacement), and RLS/CLS Role Governance."
+  description: "Enterprise hospitality semantic layer for Minor Hotels: RevPAR, ADR, GOP, Live BigQuery Write-Back (Power Apps Replacement), Real-Time Approval Workflow (Power Automate + Dataverse Replacement), and RLS/CLS Role Governance."
   persist_for: "0 seconds"
 
   # =========================================================================

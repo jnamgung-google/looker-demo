@@ -182,7 +182,7 @@ view: minor_hotel_performance {
   dimension: property_code {
     type: string
     label: "Property Code"
-    description: "Official Minor International (MINT) hotel property code."
+    description: "Official Minor Hotels property code."
     sql: ${TABLE}.property_code ;;
   }
 

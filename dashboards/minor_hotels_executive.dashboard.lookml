@@ -1,5 +1,5 @@
 - dashboard: minor_hotels_executive
-  title: "Minor Hotels (MINT) — Global Hospitality BI, Live BQ Write-Back & Governance Command Center"
+  title: "Minor Hotels — Global Hospitality BI, Live BQ Write-Back & Governance Command Center"
   layout: newspaper
   preferred_viewer: dashboards-next
   crossfilter_enabled: true
@@ -128,7 +128,7 @@
       <div style="background: linear-gradient(135deg, #1C1917 0%, #292524 65%, #3E2723 100%); color: #FAF7F2; padding: 10px 20px; border-radius: 8px; border-left: 6px solid #C5A059; font-family: sans-serif;">
         <div style="display: flex; justify-content: space-between; align-items: center; gap: 12px;">
           <div>
-            <div style="color: #C5A059; font-size: 10px; font-weight: 700; letter-spacing: 1.8px; text-transform: uppercase;">MINOR HOTELS GROUP (SET: MINT) • ENTERPRISE BI & SEMANTIC LAYER</div>
+            <div style="color: #C5A059; font-size: 10px; font-weight: 700; letter-spacing: 1.8px; text-transform: uppercase;">MINOR HOTELS • ENTERPRISE BI & SEMANTIC LAYER</div>
             <div style="font-size: 18px; font-weight: 700; margin-top: 2px; color: #FFFFFF;">Global Hospitality Portfolio, Live BigQuery Write-Back & Governance Hub</div>
             <div style="font-size: 11px; color: #D6D3D1; margin-top: 2px;">Anantara • Avani • NH Collection • Tivoli • nhow • Oaks • Elewana &nbsp;|&nbsp; <b>Unified Replacement for Power BI + Power Apps + Power Automate + Dataverse</b></div>
           </div>

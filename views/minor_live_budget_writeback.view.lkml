@@ -141,6 +141,8 @@ view: minor_live_budget_writeback {
       {% endif %} ;;
   }
 
+  # [CLS / RBAC Gated Write-Back Action]
+  # Governed by `required_access_grants: [can_submit_budget_writeback]` defined in `minor_hotels_analytics.model.lkml`.
   dimension: writeback_forecast_override_action {
     type: string
     label: "📝 1. Submit Budget Write-Back (Action)"
@@ -184,6 +186,11 @@ view: minor_live_budget_writeback {
     }
   }
 
+  # [CLS / RBAC Gated Approval Action — Approvers Only]
+  # Governed by `required_access_grants: [can_approve_budget]` defined in `minor_hotels_analytics.model.lkml`.
+  # Only users with the `can_approve_budget` access grant can view and execute this Approval column.
+  # Additionally, when the Demo Role Simulator (`rls_role_persona`) is set to Property GM (`GMAnantaraSiamBKK`),
+  # this column renders a locked badge (`🔒 Approval Locked (RVP / CFO Role Only)`).
   dimension: executive_approval_decision_action {
     type: string
     label: "✅ 2. Executive Approval Decision (Action)"
