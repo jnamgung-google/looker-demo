@@ -1,26 +1,6 @@
 view: minor_brand_targets {
   label: "Minor Brand Strategic Targets"
-  derived_table: {
-    sql:
-      SELECT * FROM UNNEST([
-        STRUCT(
-          'Anantara Hotels & Resorts' AS brand_name,
-          'Ultra-Luxury & Indigenous Experiential' AS brand_positioning,
-          'Indigenous Luxury Resorts & Flagship Urban Icons' AS brand_segment_focus,
-          0.425 AS target_gop_margin_pct,
-          0.380 AS target_discovery_direct_share_pct,
-          0.115 AS owner_wacc_hurdle_pct,
-          445.0 AS target_revpar_usd,
-          28.5 AS sustainability_target_kwh_per_night
-        ),
-        STRUCT('Avani Hotels & Resorts', 'Upscale Contemporary Lifestyle', 'Millennial-Minded Upscale Resorts & MICE', 0.390, 0.340, 0.105, 165.0, 21.0),
-        STRUCT('NH Collection', 'Upper-Upscale Urban Landmark', 'Gateway European & Latin American City Centers', 0.385, 0.350, 0.100, 225.0, 19.5),
-        STRUCT('Tivoli Hotels & Resorts', 'Timeless Heritage & Cosmopolitan Luxury', 'Historic European & Cultural Leisure Destinations', 0.405, 0.360, 0.108, 295.0, 23.0),
-        STRUCT('nhow Hotels', 'Disruptive Design & Creative Lifestyle', 'High-Energy Convention & Cultural Hubs', 0.375, 0.320, 0.098, 175.0, 18.0),
-        STRUCT('Oaks Hotels, Resorts & Suites', 'Upper-Midscale Serviced Apartments', 'Extended Stay & Regional Corporate Suites', 0.440, 0.300, 0.095, 145.0, 16.5),
-        STRUCT('Elewana Collection', 'Ultra-Luxury Boutique Safari & Conservation', 'East African Iconic Bush Camps & Lodges', 0.460, 0.420, 0.125, 820.0, 14.0)
-      ]) ;;
-  }
+  sql_table_name: `eco-shift-478607-e5.minor_hotels_demo.minor_brand_targets` ;;
 
   dimension: brand_name {
     primary_key: yes

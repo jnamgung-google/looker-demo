@@ -2,13 +2,7 @@ view: minor_rls_access_control {
   label: "Dynamic RLS Access Requests & Live Entitlements"
   derived_table: {
     sql:
-      WITH baseline_rls_regions AS (
-        SELECT 'Thailand & Indochina' AS region_name, 'RLS|Thailand & Indochina' AS rls_scope_key, 'VP Ops — Asia (BKK HQ)' AS data_steward, 'Baseline: Thailand & Indochina RVP Scope' AS default_note UNION ALL
-        SELECT 'Europe & Americas', 'RLS|Europe & Americas', 'EVP Europe & Americas (Madrid)', 'Baseline: Europe & Americas RVP Scope' UNION ALL
-        SELECT 'Middle East & Indian Ocean', 'RLS|Middle East & Indian Ocean', 'SVP Middle East & Indian Ocean (Dubai)', 'Baseline: Middle East & Indian Ocean RVP Scope' UNION ALL
-        SELECT 'Australasia & Africa', 'RLS|Australasia & Africa', 'VP Australasia & Africa (Melbourne)', 'Baseline: Australasia & Africa RVP Scope'
-      ),
-      live_rls_events AS (
+      WITH live_rls_events AS (
         SELECT
           CAST(target_month AS STRING) AS rls_scope_key,
           COALESCE(CAST(updated_by AS STRING), 'requester@minor.com') AS updated_by,
@@ -33,7 +27,7 @@ view: minor_rls_access_control {
           WHEN UPPER(COALESCE(l.note, '')) LIKE '%[RLS_REVOKED]%' THEN '3. Access Revoked — Returned to Baseline'
           ELSE '0. Default Role Policy (No Override)'
         END AS dynamic_rls_entitlement_status
-      FROM baseline_rls_regions b
+      FROM `eco-shift-478607-e5.minor_hotels_demo.minor_rls_region_stewards` b
       LEFT JOIN live_rls_events l
         ON b.rls_scope_key = l.rls_scope_key
         AND l.rn = 1 ;;

@@ -2,15 +2,7 @@ view: minor_live_budget_writeback {
   label: "Live BQ Budget Write-Back & Approvals"
   derived_table: {
     sql:
-      WITH baseline_budget_seeds AS (
-        SELECT '2026-05' AS target_month, 22100000.0 AS target_amount, 'somchai.r@minor.com' AS updated_by, TIMESTAMP('2026-05-01 08:00:00 UTC') AS updated_at, '[APPROVED BY REGIONAL VP] May 2026 Official Minor Group Portfolio Budget' AS note UNION ALL
-        SELECT '2026-06', 23800000.0, 'carlos.m@minor-nh.com', TIMESTAMP('2026-06-01 08:30:00 UTC'), '[APPROVED BY GROUP CFO] June 2026 European Summer Ramp & MICE Target' UNION ALL
-        SELECT '2026-07', 25900000.0, 'lorenzo.c@anantara.com', TIMESTAMP('2026-07-01 09:15:00 UTC'), '[APPROVED BY GROUP CFO] July 2026 Peak Leisure & Elewana Safari Target' UNION ALL
-        SELECT '2026-08', 26850000.0, 'tariq.a@anantara.com', TIMESTAMP('2026-08-01 10:00:00 UTC'), '[APPROVED BY REGIONAL VP] August 2026 Mediterranean & Maldives High Season' UNION ALL
-        SELECT '2026-09', 25600000.0, 'kanda.v@avanihotels.com', TIMESTAMP('2026-09-02 11:20:00 UTC'), '[PENDING VP APPROVAL] Sept 2026 APAC Corporate Conference Reforecast' UNION ALL
-        SELECT '2026-10', 27500000.0, 'fpa.director@minor.com', TIMESTAMP('2026-10-01 14:45:00 UTC'), '[PENDING CFO COMMITTEE] Oct 2026 Q4 Thailand High Season & ADR Uplift'
-      ),
-      combined_history AS (
+      WITH combined_history AS (
         SELECT
           CAST(target_month AS STRING) AS target_month,
           CAST(target_amount AS FLOAT64) AS target_amount,
@@ -30,7 +22,7 @@ view: minor_live_budget_writeback {
           updated_at,
           note,
           'SEED_BASELINE' AS record_source
-        FROM baseline_budget_seeds
+        FROM `eco-shift-478607-e5.minor_hotels_demo.minor_budget_baseline_seeds`
       ),
       override_counts AS (
         SELECT
