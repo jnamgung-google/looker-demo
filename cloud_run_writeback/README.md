@@ -8,43 +8,19 @@
 
 ---
 
-## 1. Reference Architecture Diagram (Looker Action + Cloud Run + BigQuery)
+## 1. Reference Architecture Diagram (Looker Action $\rightarrow$ Cloud Run $\rightarrow$ BigQuery $\rightarrow$ Looker)
 
 ```mermaid
-flowchart TB
-    subgraph Users["1. Hospitality Personas (SSO / Entra ID / Google Identity)"]
-        U1["🏨 Property GM<br/>(user_attribute: country = 'Thailand')<br/>Submit Forecast Override"]
-        U2["👔 Regional VP / Group CFO<br/>(access_grant: can_approve_budget)<br/>Review & Approve / Unlock RLS"]
-    end
+flowchart LR
+    A["1. Looker Action<br/>(Update Target / Approve)<br/>────────────<br/>• User enters new value in UI<br/>• RBAC via access_grant"]
+    B["2. Cloud Run<br/>(Serverless Webhook)<br/>────────────<br/>• Receives JSON payload<br/>• Runs SQL DML INSERT"]
+    C[("3. BigQuery<br/>(Target & Audit Table)<br/>────────────<br/>• Append-only log table<br/>• Keeps latest row (rn = 1)")]
+    D["4. Looker Dashboard<br/>(Real-Time Refresh)<br/>────────────<br/>• Zero cache (0 sec)<br/>• Filtered by country RLS"]
 
-    subgraph Looker["2. Looker Semantic Layer & Governance (minor-hotels-demo)"]
-        direction TB
-        RLS["🔒 Row-Level Security (RLS)<br/>sql_always_where: country = _user_attributes['country']<br/>(If NULL/empty -> Full Global View)"]
-        CLS["🛡️ Column-Level Security (CLS)<br/>required_access_grants: [can_approve_budget]<br/>Hides Approval Action from non-approvers"]
-        ACT["⚡ LookML Native Action (action:)<br/>Pre-fills Property, Month, Amount &<br/>Injects Server-Side SSO Email"]
-        CACHE["🔄 Zero-Cache Policy<br/>persist_for: '0 seconds'<br/>Instant UI Refresh"]
-    end
-
-    subgraph Serverless["3. Serverless Webhook (Cloud Run / Cloud Functions Gen 2)"]
-        CF["🚀 Node.js 20 Action Endpoint<br/>(demo-bq-insert-action)<br/>1. Validates Looker Webhook Request<br/>2. Parses Form Payload & User Email<br/>3. Executes Standard SQL DML INSERT"]
-    end
-
-    subgraph BQ["4. Google BigQuery (eco-shift-478607-e5.minor_hotels_demo)"]
-        T1[("🏛️ minor_hotel_performance<br/>(72 Property-Month Fact Rows)<br/>Physical Column: country")]
-        T2[("📝 monthly_sales_targets<br/>(Append-Only Write-Back & Approval Log)<br/>Tracks [PENDING], [APPROVED], [RLS_APPROVED]")]
-        V1["🔍 LookML Derived View<br/>ROW_NUMBER() OVER (PARTITION BY target_month<br/>ORDER BY updated_at DESC) = 1"]
-    end
-
-    U1 -->|"Opens Dashboard"| RLS
-    U2 -->|"Opens Dashboard"| RLS
-    RLS --> CLS
-    CLS -->|"Clicks ⋮ -> Submit / Approve"| ACT
-    ACT -->|"HTTPS POST JSON Payload"| CF
-    CF -->|"INSERT INTO monthly_sales_targets"| T2
-    T2 --> V1
-    T1 --> RLS
-    V1 -->|"LEFT JOIN & Instant Re-query"| CACHE
-    CACHE -->|"Updated Target & Status in <1s"| Users
+    A -->|"1. HTTPS POST<br/>(Value + User Email)"| B
+    B -->|"2. INSERT INTO<br/>monthly_sales_targets"| C
+    C -->|"3. Instant Query<br/>(Latest Approved Target)"| D
+    D -.->|"4. Next Edit / Approval"| A
 ```
 
 ---
