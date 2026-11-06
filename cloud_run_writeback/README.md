@@ -2,7 +2,7 @@
 
 > [!IMPORTANT]
 > **Executive Summary for Customer Follow-Up**
-> 1. **End-to-End Write-Back & Approval Architecture**: LookML alone defines the UI form and RBAC, while a lightweight **Cloud Run (Cloud Functions Gen 2)** webhook receives the payload and executes a standard SQL `INSERT INTO` against an **Append-Only BigQuery table** (`monthly_sales_targets`). Total implementation effort is **~2–3 engineering days**.
+> 1. **End-to-End Write-Back & Approval Architecture**: LookML alone defines the UI form and RBAC, while a lightweight **Cloud Run (Cloud Functions Gen 2)** webhook receives the payload and executes a standard SQL `INSERT INTO` against an **Append-Only BigQuery table** (`monthly_sales_targets`).
 > 2. **Why Microsoft Dataverse Is Not Needed**: In Power BI, Dataverse + Power Apps + Power Automate are required because Power BI lacks native write-back actions. In **Looker + BigQuery**, both **Live Write-Back** and **Dynamic RLS Lookup** run natively inside BigQuery with zero Power Platform Premium licensing costs and zero cross-cloud latency.
 > 3. **If Legacy Dataverse Integration Is Required**: Looker can integrate with Dataverse via **Dataverse Web API (OData v4 / v9.2)** either through **Cloud Run webhook dual-write** (for write-back) or **scheduled ELT sync to BigQuery** (for RLS lookup tables).
 
@@ -25,18 +25,17 @@ flowchart LR
 
 ---
 
-## 2. What Else Is Needed Beyond LookML? (5-Step Implementation & Effort Estimate)
+## 2. What Else Is Needed Beyond LookML? (5-Step Implementation Guide)
 
-LookML (`minor_hotels_analytics.model.lkml` and `views/*.view.lkml`) provides the **semantic layer, action modal UI, and RLS/CLS security rules**, but **4 additional infrastructure steps** are required to make BigQuery Write-Back work end-to-end:
+LookML (`minor_hotels_analytics.model.lkml` and `views/*.view.lkml`) provides the **semantic layer, action modal UI, and RLS/CLS security rules**, and **4 additional infrastructure steps** are required to make BigQuery Write-Back work end-to-end:
 
-| Step | Component | What Needs to Be Done | Estimated Effort |
-| :--- | :--- | :--- | :--- |
-| **Step 1** | **BigQuery Target Table (Append-Only)** | Create an append-only audit log table (`monthly_sales_targets`) in BigQuery (`target_month`, `target_amount`, `updated_by`, `updated_at`, `note`). Append-only `INSERT` avoids BigQuery streaming buffer `UPDATE` locks and preserves 100% audit history. | **0.5 Hours** |
-| **Step 2** | **Cloud Run / Cloud Functions Gen 2 Webhook** | Deploy a lightweight Node.js or Python HTTP endpoint (`POST /action-0/execute`) that accepts Looker's Action JSON payload (`form_params` + `data`) and executes `INSERT INTO ... VALUES (...)` via the BigQuery client library. *(Tip: Use a `*.cloudfunctions.net` or Custom Load Balancer domain so DNS responses return a single Anycast IP).* | **4 Hours (0.5 Days)** |
-| **Step 3** | **IAM & Service Account Permissions** | Grant the Cloud Run runtime Service Account `roles/bigquery.dataEditor` (on the target write-back dataset) and `roles/bigquery.jobUser` (on the project). Configure authentication validation between Looker and Cloud Run. | **2 Hours** |
-| **Step 4** | **Looker User Attributes & Access Grants** | In **Looker Admin > User Attributes**, create `country` (mapped to SSO/SAML/OIDC group or user claims) for RLS, and configure `access_grant` (`can_approve_budget`) for CLS approval gating. | **2 Hours** |
-| **Step 5** | **LookML Action & Window-Function View** | Connect the LookML `action:` URL to the Cloud Run endpoint, join the latest write-back row via `ROW_NUMBER() OVER (PARTITION BY ... ORDER BY updated_at DESC) = 1`, and set `persist_for: "0 seconds"` on the Explore. | **4 Hours (0.5 Days)** |
-| **Total** | **End-to-End POC Implementation** | **Full production-grade setup in customer's non-prod GCP environment** | **~1.5 to 2 Days** |
+| Step | Component | What Needs to Be Done |
+| :--- | :--- | :--- |
+| **Step 1** | **BigQuery Target Table (Append-Only)** | Create an append-only audit log table (`monthly_sales_targets`) in BigQuery (`target_month`, `target_amount`, `updated_by`, `updated_at`, `note`). Append-only `INSERT` avoids BigQuery streaming buffer `UPDATE` locks and preserves 100% audit history. |
+| **Step 2** | **Cloud Run / Cloud Functions Gen 2 Webhook** | Deploy a lightweight Node.js or Python HTTP endpoint (`POST /action-0/execute`) that accepts Looker's Action JSON payload (`form_params` + `data`) and executes `INSERT INTO ... VALUES (...)` via the BigQuery client library. *(Tip: Use a `*.cloudfunctions.net` or Custom Load Balancer domain so DNS responses return a single Anycast IP).* |
+| **Step 3** | **IAM & Service Account Permissions** | Grant the Cloud Run runtime Service Account `roles/bigquery.dataEditor` (on the target write-back dataset) and `roles/bigquery.jobUser` (on the project). Configure authentication validation between Looker and Cloud Run. |
+| **Step 4** | **Looker User Attributes & Access Grants** | In **Looker Admin > User Attributes**, create `country` (mapped to SSO/SAML/OIDC group or user claims) for RLS, and configure `access_grant` (`can_approve_budget`) for CLS approval gating. |
+| **Step 5** | **LookML Action & Window-Function View** | Connect the LookML `action:` URL to the Cloud Run endpoint, join the latest write-back row via `ROW_NUMBER() OVER (PARTITION BY ... ORDER BY updated_at DESC) = 1`, and set `persist_for: "0 seconds"` on the Explore. |
 
 ---
 
@@ -113,8 +112,7 @@ In the Microsoft Power Platform ecosystem, **Power BI is read-only** and cannot 
 If Minor Hotels already maintains master data or user-country mappings inside **Dynamics 365 / Microsoft Dataverse** and wants to connect it during a phased migration, here are the 3 technical interface options:
 
 1. **Option 1 — Full Native Replacement in BigQuery (Recommended)**
-   * Migrate the static/semi-static RLS mapping table and Budget Write-Back table into **BigQuery** (`minor_hotels_demo`).
-   * **Effort**: Lowest (~1–2 days). **Performance**: Fastest (<1s). **Cost**: Lowest.
+   * Migrate the static/semi-static RLS mapping table and Budget Write-Back table into **BigQuery** (`minor_hotels_demo`), delivering sub-second query performance and zero additional licensing cost.
 2. **Option 2 — Dataverse as Upstream Master for RLS (ELT Sync to BigQuery)**
    * *Avoid querying Dataverse OData API live on every Looker query* (Dataverse Web API has strict concurrency/throttling limits and adds 1–3s cross-cloud latency).
    * Instead, sync the Dataverse RLS table to BigQuery every 5–15 minutes using **Azure Synapse Link for Dataverse / Fabric Export**, **BigQuery Data Transfer / Cloud Composer**, or a lightweight **Cloud Run cron job querying the Dataverse Web API (`GET https://<org>.crm.dynamics.com/api/data/v9.2/<entity>`)** using Microsoft Entra ID OAuth 2.0 Client Credentials.
